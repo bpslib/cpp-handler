@@ -10,5 +10,6 @@
 #include <stdexcept>
 #include <sstream>
 #include <algorithm>
+#include <regex>
 
 #endif //PCH_H

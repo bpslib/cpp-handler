@@ -354,8 +354,9 @@ namespace bps_core {
 	}
 
 	void parser::tchar() {
-		auto val = _curToken.image.substr(1, _curToken.image.length() - 2);
-		char cValue = val.replace(val.begin(), val.end(), "\\", "").c_str()[0];
+		std::string val = _curToken.image.substr(1, _curToken.image.length() - 2);
+		val = std::regex_replace(val, std::regex("\\\\"), "");
+		char cValue = val[0];
 		_value = cValue;
 		set_value();
 	}
