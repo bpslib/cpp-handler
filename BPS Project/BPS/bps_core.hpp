@@ -39,20 +39,6 @@ namespace bps_core {
 		ARRAY_SEP = 13
 	};
 
-	class token {
-	public:
-		token_category category;
-		std::string image;
-		int line;
-		int collumn;
-
-		token() = default;
-
-		token(const token_category&, const std::string&, int, int);
-
-		bool operator==(const token&) const;
-	};
-
 	enum symbols {
 		HASH = '#',
 		LEFT_BRACKETS = '[',
@@ -71,6 +57,20 @@ namespace bps_core {
 		TAB = '\t'
 	};
 
+	class token {
+	public:
+		token_category category;
+		std::string image;
+		int line;
+		int collumn;
+
+		token() = default;
+
+		token(const token_category&, const std::string&, int, int);
+
+		bool operator==(const token&) const;
+	};
+
 	const char skip[] = { SPACE, TAB, NEWLINE, RETURN };
 
 	bool is_skip(char);
@@ -79,14 +79,14 @@ namespace bps_core {
 
 	static class lexer {
 	private:
-		static std::vector<token> tokens;
+		static std::vector<token> _tokens;
 
 		// control vars
 		static std::string _input;
-		static char _curChar;
-		static int _curIndex;
-		static int _curLine;
-		static int _curCollumn;
+		static char _curr_char;
+		static int _curr_index;
+		static int _curr_line;
+		static int _curr_collumn;
 
 	public:
 		static std::vector<token> tokenize(std::string);
@@ -103,16 +103,16 @@ namespace bps_core {
 
 	class parser {
 	private:
-		static std::map<std::string, std::any> parsedData;
+		static std::map<std::string, std::any> _parsed_data;
 
 		// control vars
 		static std::vector<token> _tokens;
-		static token _curToken;
-		static int _curIndex;
+		static token _curr_token;
+		static int _curr_index;
 
 		static std::string _key;
 		static std::any _value;
-		static std::stack<std::vector<std::any>> _arrStack;
+		static std::stack<std::vector<std::any>> _arr_stack;
 
 		static const int CONTEXT_KEY;
 		static const int CONTEXT_ARRAY;
