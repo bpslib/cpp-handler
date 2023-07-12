@@ -34,14 +34,22 @@ namespace bps_core {
 		return msg.str();
 	}
 
-	std::vector<token> lexer::_tokens = std::vector<token>();
-	std::string lexer::_input = std::string();
+	std::vector<token> lexer::_tokens;
+	std::string lexer::_input;
 	char lexer::_curr_char;
-	int lexer::_curr_index = 0;
-	int lexer::_curr_line = 1;
-	int lexer::_curr_collumn = 1;
+	int lexer::_curr_index;
+	int lexer::_curr_line;
+	int lexer::_curr_collumn;
+
+	void lexer::init() {
+		_tokens = std::vector<token>();
+		_curr_index = 0;
+		_curr_line = 1;
+		_curr_collumn = 1;
+	}
 
 	std::vector<token> lexer::tokenize(std::string input) {
+		init();
 		_input = input;
 
 		next_char();
@@ -62,7 +70,8 @@ namespace bps_core {
 				}
 				next_line();
 				next_char();
-			} else if (std::isalpha(_curr_char) or _curr_char == symbols::UNDERSCORE) { // key, boolean or null
+			}
+			else if (std::isalpha(_curr_char) or _curr_char == symbols::UNDERSCORE) { // key, boolean or null
 				auto lexeme = std::string(&_curr_char);
 				auto initCol = _curr_collumn;
 				next_char();
@@ -76,9 +85,11 @@ namespace bps_core {
 				// true or false
 				if (lexeme == "true" or lexeme == "false") {
 					_tokens.push_back(token(token_category::BOOL, lexeme, _curr_line, initCol));
-				} else if (lexeme == "null") { // null 
+				}
+				else if (lexeme == "null") { // null 
 					_tokens.push_back(token(token_category::T_NULL, lexeme, _curr_line, initCol));
-				} else { // key
+				}
+				else { // key
 					_tokens.push_back(token(token_category::KEY, lexeme, _curr_line, initCol));
 				}
 			}
@@ -86,26 +97,38 @@ namespace bps_core {
 			else if (_curr_char == symbols::LEFT_BRACKETS) {
 				_tokens.push_back(token(token_category::OPEN_ARRAY, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
-			} else if (_curr_char == symbols::RIGHT_BRACKETS) { // close array
+			}
+			// close array
+			else if (_curr_char == symbols::RIGHT_BRACKETS) {
 				_tokens.push_back(token(token_category::CLOSE_ARRAY, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
-			} else if (_curr_char == symbols::SEMICOLON) { // end of data
+			}
+			// end of data
+			else if (_curr_char == symbols::SEMICOLON) {
 				_tokens.push_back(token(token_category::END_OF_DATA, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
-			} else if (_curr_char == symbols::COMMA) { // array sep
+			}
+			// array sep
+			else if (_curr_char == symbols::COMMA) {
 				_tokens.push_back(token(token_category::ARRAY_SEP, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
-			} else if (_curr_char == symbols::COLON) { // data sep
+			}
+			// data sep
+			else if (_curr_char == symbols::COLON) {
 				_tokens.push_back(token(token_category::DATA_SEP, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
-			} else if (_curr_char == symbols::DQUOTE) { // string
+			}
+			// string
+			else if (_curr_char == symbols::DQUOTE) {
 				auto lexeme = std::string(&_curr_char);
 				auto initCol = _curr_collumn;
 				auto beforeChar = _curr_char;
 				next_char();
 				while (!end_of_input() and (_curr_char != symbols::DQUOTE or beforeChar == '\\')) {
+					if (_curr_char != '\\' or beforeChar == '\\') {
+						lexeme += _curr_char;
+					}
 					beforeChar = _curr_char;
-					lexeme += _curr_char;
 					next_char();
 				}
 				if (_curr_char != symbols::DQUOTE) {
@@ -114,7 +137,9 @@ namespace bps_core {
 				lexeme += _curr_char;
 				_tokens.push_back(token(token_category::STRING, lexeme, _curr_line, initCol));
 				next_char();
-			} else if (_curr_char == symbols::QUOTE) { // char
+			}
+			// char
+			else if (_curr_char == symbols::QUOTE) {
 				auto lexeme = std::string(&_curr_char);
 				auto initCol = _curr_collumn;
 				next_char();
@@ -130,7 +155,9 @@ namespace bps_core {
 				lexeme += _curr_char;
 				_tokens.push_back(token(token_category::CHAR, lexeme, _curr_line, initCol));
 				next_char();
-			} else if (std::isdigit(_curr_char) or _curr_char == symbols::DOT or _curr_char == symbols::MINUS) { // numeric
+			}
+			// numeric
+			else if (std::isdigit(_curr_char) or _curr_char == symbols::DOT or _curr_char == symbols::MINUS) {
 				auto lexeme = std::string(&_curr_char);
 				auto initCol = _curr_collumn;
 				auto dotted = _curr_char == symbols::DOT;
@@ -139,7 +166,8 @@ namespace bps_core {
 					if (_curr_char == symbols::DOT) {
 						if (dotted) {
 							throw std::invalid_argument(build_lexer_error_message("Double dot encountered", _curr_line, _curr_collumn));
-						} else {
+						}
+						else {
 							dotted = true;
 						}
 					}
@@ -152,14 +180,17 @@ namespace bps_core {
 				}
 				std::transform(lexeme.begin(), lexeme.end(), lexeme.begin(), ::tolower);
 				// float, double or int
-				if (lexeme.find('f')) {
+				if (lexeme.find('f') != std::string::npos) {
 					_tokens.push_back(token(token_category::FLOAT, lexeme, _curr_line, initCol));
-				} else if (lexeme.find(symbols::DOT) or lexeme.find('d')) {
+				}
+				else if (lexeme.find(symbols::DOT) != std::string::npos or lexeme.find('d') != std::string::npos) {
 					_tokens.push_back(token(token_category::DOUBLE, lexeme, _curr_line, initCol));
-				} else {
+				}
+				else {
 					_tokens.push_back(token(token_category::INTEGER, lexeme, _curr_line, initCol));
 				}
-			} else {
+			}
+			else {
 				std::stringstream msg;
 				msg << "Invalid character '";
 				msg << _curr_char;
@@ -206,6 +237,7 @@ namespace bps_core {
 	}
 
 	std::map<std::string, std::any> parser::_parsed_data = std::map<std::string, std::any>();
+	std::stringstream parser::plain_string_builder;
 	std::vector<token> parser::_tokens;
 	token parser::_curr_token;
 	int parser::_curr_index = -1;
@@ -216,7 +248,19 @@ namespace bps_core {
 	const int parser::CONTEXT_ARRAY = 1;
 	int parser::_context = CONTEXT_KEY;
 
+	void parser::init_parse() {
+		_parsed_data = std::map<std::string, std::any>();
+		_curr_index = -1;
+		_arr_stack = std::stack<std::vector<std::any>>();
+		_context = CONTEXT_KEY;
+	}
+
+	void parser::init_plain() {
+		plain_string_builder = std::stringstream();
+	}
+
 	std::map<std::string, std::any> parser::parse(std::string data) {
+		init_parse();
 		_tokens = lexer::tokenize(data);
 		start();
 		return _parsed_data;
@@ -230,15 +274,15 @@ namespace bps_core {
 
 	void parser::statement() {
 		switch (_curr_token.category) {
-			case token_category::KEY:
-				Key();
-				break;
-			default:
-				break;
+		case token_category::KEY:
+			key();
+			break;
+		default:
+			break;
 		}
 	}
 
-	void parser::Key() {
+	void parser::key() {
 		_key = _curr_token.image;
 		next_token();
 		consume_token(token_category::DATA_SEP);
@@ -249,95 +293,63 @@ namespace bps_core {
 
 	void parser::value() {
 		switch (_curr_token.category) {
-			case token_category::OPEN_ARRAY:
-				open_array();
-				next_token();
-				tarray();
-				break;
-			case token_category::STRING:
-				tstring();
-				break;
-			case token_category::CHAR:
-				tchar();
-				break;
-			case token_category::INTEGER:
-				tinteger();
-				break;
-			case token_category::FLOAT:
-				tfloat();
-				break;
-			case token_category::DOUBLE:
-				tdouble();
-				array_sel();
-				break;
-			case token_category::BOOL:
-				tbool();
-				break;
-			case token_category::T_NULL:
-				tnull();
-				break;
-			default:
-				build_parser_error_message(_curr_token.image, _curr_token.line, _curr_token.collumn, "a value or array");
+		case token_category::OPEN_ARRAY:
+			tarray();
+			break;
+		case token_category::STRING:
+			tstring();
+			break;
+		case token_category::CHAR:
+			tchar();
+			break;
+		case token_category::INTEGER:
+			tinteger();
+			break;
+		case token_category::FLOAT:
+			tfloat();
+			break;
+		case token_category::DOUBLE:
+			tdouble();
+			break;
+		case token_category::BOOL:
+			tbool();
+			break;
+		case token_category::T_NULL:
+			tnull();
+			break;
+		default:
+			build_parser_error_message(_curr_token.image, _curr_token.line, _curr_token.collumn, "a value or array");
+		}
+
+		if (_context == CONTEXT_ARRAY)
+		{
+			array_selector();
+		}
+	}
+
+	void parser::array_selector() {
+		switch (_curr_token.category) {
+		case token_category::ARRAY_SEP:
+			next_token();
+			value();
+			break;
+		case token_category::CLOSE_ARRAY:
+			close_array();
+			next_token();
+			array_selector();
+			break;
+		case token_category::END_OF_DATA:
+		case token_category::T_EOF:
+			break;
+		default:
+			build_parser_error_message(_curr_token.image, _curr_token.line, _curr_token.collumn, "',', ']' or ';'");
 		}
 	}
 
 	void parser::tarray() {
-		switch (_curr_token.category) {
-			case token_category::OPEN_ARRAY:
-				open_array();
-				next_token();
-				tarray();
-				break;
-			case token_category::STRING:
-				tstring();
-				array_sel();
-				break;
-			case token_category::CHAR:
-				tchar();
-				array_sel();
-				break;
-			case token_category::INTEGER:
-				tinteger();
-				array_sel();
-				break;
-			case token_category::FLOAT:
-				tfloat();
-				array_sel();
-				break;
-			case token_category::DOUBLE:
-				tdouble();
-				array_sel();
-				break;
-			case token_category::BOOL:
-				tbool();
-				array_sel();
-				break;
-			case token_category::T_NULL:
-				tnull();
-				array_sel();
-				break;
-			default:
-				build_parser_error_message(_curr_token.image, _curr_token.line, _curr_token.collumn, "a value or array");
-		}
-	}
-
-	void parser::array_sel() {
-		switch (_curr_token.category) {
-			case token_category::ARRAY_SEP:
-				next_token();
-				tarray();
-				break;
-			case token_category::CLOSE_ARRAY:
-				close_array();
-				next_token();
-				array_sel();
-				break;
-			case token_category::END_OF_DATA:
-			case token_category::T_EOF:
-				break;
-			default:
-				build_parser_error_message(_curr_token.image, _curr_token.line, _curr_token.collumn, "',', ']' or ';'");
-		}
+		open_array();
+		next_token();
+		value();
 	}
 
 	void parser::tstring() {
@@ -392,7 +404,8 @@ namespace bps_core {
 	void parser::set_value() {
 		if (_context == CONTEXT_ARRAY) {
 			_arr_stack.top().push_back(_value);
-		} else {
+		}
+		else {
 			_parsed_data.emplace(_key, _value);
 		}
 		next_token();
@@ -402,26 +415,22 @@ namespace bps_core {
 		if (_arr_stack.size() == 0) {
 			_context = CONTEXT_ARRAY;
 			_arr_stack.push(std::vector<std::any>());
-		} else {
-			auto newD = std::vector<std::any>();
-			_arr_stack.top().push_back(&newD);
-			_arr_stack.push(newD);
+		}
+		else {
+			auto newDimension = std::vector<std::any>();
+			_arr_stack.top().push_back(newDimension);
+			_arr_stack.push(newDimension);
 		}
 	}
 
 	void parser::close_array() {
 		if (_arr_stack.size() > 1) {
 			_arr_stack.pop();
-		} else {
+		}
+		else {
 			_context = CONTEXT_KEY;
-			std::vector<std::any> vector = _arr_stack.top();
-			size_t vector_size = vector.size();
-			std::any* arr = new std::any[vector_size];
-			for (int i = 0; i < vector_size; ++i) {
-				arr[i] = vector[i];
-			}
+			_parsed_data.emplace(_key, _arr_stack.top());
 			_arr_stack.pop();
-			_parsed_data.emplace(_key, arr);
 		}
 	}
 
@@ -436,6 +445,81 @@ namespace bps_core {
 			build_parser_error_message(_curr_token.image, _curr_token.line, _curr_token.collumn, TOKEN_IMAGE[(int)category]);
 		}
 		next_token();
+	}
+
+	std::string parser::plain(std::map<std::string, std::any> data) {
+		init_plain();
+
+		// loops bps file adding each key-value to output
+		for (auto d : data) {
+			plain_string_builder << d.first;
+			plain_string_builder << ":";
+			plain_value(d.second);
+			plain_string_builder << ";" << std::endl;
+		}
+
+		return plain_string_builder.str();
+	}
+
+	void parser::plain_value(std::any value) {
+		// null values
+		if (value.type() == typeid(nullptr)) {
+			plain_string_builder << "null";
+		}
+		// value is an array
+		else if (value.type() == typeid(std::vector<std::any>)) {
+			plain_string_builder << "[";
+			plain_array(std::any_cast<std::vector<std::any>>(value));
+			plain_string_builder << "]";
+		}
+		// it's a normal value
+		else {
+			if (value.type() == typeid(std::string)) {
+				plain_string_builder << "\"";
+				plain_string_builder << std::regex_replace(std::any_cast<std::string>(value), std::regex("\""), "\\\"");
+				plain_string_builder << "\"";
+			}
+			else if (value.type() == typeid(char)) {
+				char c = std::any_cast<char>(value);
+				plain_string_builder << "'";
+				if (c == '\'') {
+					plain_string_builder << "\\";
+				}
+				else {
+					plain_string_builder << "";
+				}
+				plain_string_builder << c;
+				plain_string_builder << "'";
+			}
+			else if (value.type() == typeid(bool))
+			{
+				plain_string_builder << std::any_cast<bool>(value) ? "true" : "false";
+			}
+			else if (value.type() == typeid(float))
+			{
+				plain_string_builder << std::any_cast<float>(value);
+				plain_string_builder << 'f';
+			}
+			else if (value.type() == typeid(double))
+			{
+				plain_string_builder << std::any_cast<double>(value);
+				plain_string_builder << 'd';
+			}
+			else
+			{
+				plain_string_builder << std::any_cast<int>(value);
+			}
+		}
+	}
+
+	void parser::plain_array(std::vector<std::any> vector) {
+		// loops each value in array
+		for (auto i = 0; i < vector.size(); ++i) {
+			plain_value(vector[i]);
+			if (i < vector.size() - 1) {
+				plain_string_builder << ",";
+			}
+		}
 	}
 
 }

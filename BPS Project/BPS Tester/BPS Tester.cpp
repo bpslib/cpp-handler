@@ -19,7 +19,10 @@ struct is_array<T[N]> {
 void print_value(const std::any& value) {
 	//auto valueType = value.type().name();
 
-	if (value.type() == typeid(std::string)) {
+	if (value.type() == typeid(nullptr)) {
+		std::cout << "null";
+	}
+	else if (value.type() == typeid(std::string)) {
 		std::cout << std::any_cast<std::string>(value);
 	}
 	else if (value.type() == typeid(bool)) {
@@ -37,30 +40,15 @@ void print_value(const std::any& value) {
 	else if (value.type() == typeid(double)) {
 		std::cout << std::any_cast<double>(value);
 	}
-	else if (value.type() == typeid(std::any*)) {
+	else if (value.type() == typeid(std::vector<std::any>)) {
 		std::cout << '[';
-		auto value_ptr = std::any_cast<std::any*>(value);
-		if (value_ptr != nullptr){
-			size_t index = 0;
-			while (true) {
-				try {
-					const std::type_info type = value_ptr[index].type();
-					if (value_ptr[index].type() == typeid(std::any*) or value_ptr[index].type() == typeid(std::any)) {
-						print_value(value_ptr[index++]);
-						if (value_ptr[index].type() == typeid(std::any*) or value_ptr[index].type() == typeid(std::any)) {
-							std::cout << ',';
-						} else {
-							break;
-						}
-					} else {
-						break;
-					}
-				} catch (const std::exception& ex) {
-					break;
-				}
+		auto vec_value = std::any_cast<std::vector<std::any>>(value);
+		for (auto i = 0; i < vec_value.size(); ++i) {
+			print_value(vec_value[i]);
+			if (i < vec_value.size() - 1) {
+				std::cout << ',';
 			}
 		}
-		delete[] value_ptr;
 		std::cout << ']';
 	}
 }
@@ -83,7 +71,7 @@ int main() {
 	//std::cout << strData;
 
 	std::string data = "";
-	data += "key01:\"value\";";
+	data += "key01:\"value\";\n";
 	data += "key02:10;\n";
 	data += "key03:10f;\n";
 	data += "key04:10.5;\n";
@@ -94,13 +82,15 @@ int main() {
 	data += "key09:true;\n";
 	data += "key10:false;\n";
 	data += "key11:[false,true,false];\n";
-	//data += "key12:[[10,5],[5,8]];\n";
-	//data += "key13:-55;\n";
-	//data += "key14:[\"fal\\\"se\"];\n";
-	auto bpsStructData = BPS::parse(data);
+	data += "key12:[[10,5],[5,8]];\n";
+	data += "key13:-55;\n";
+	data += "key14:[\"fal\\\"se\"];\n";
+	data += "key15:null;\n";
+	auto bps_struct_data = BPS::parse(data);
 
-	//std::string strData = std::any_cast<std::string>(bpsStructData["key1"]);
-	//std::cout << strData;
+	print_map(bps_struct_data);
 
-	print_map(bpsStructData);
+	auto bps_string_data = BPS::plain(bps_struct_data);
+
+	std::cout << std::endl << bps_string_data;
 }

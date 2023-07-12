@@ -88,6 +88,8 @@ namespace bps_core {
 		static int _curr_line;
 		static int _curr_collumn;
 
+		static void init();
+
 	public:
 		static std::vector<token> tokenize(std::string);
 
@@ -104,6 +106,7 @@ namespace bps_core {
 	class parser {
 	private:
 		static std::map<std::string, std::any> _parsed_data;
+		static std::stringstream plain_string_builder;
 
 		// control vars
 		static std::vector<token> _tokens;
@@ -118,19 +121,23 @@ namespace bps_core {
 		static const int CONTEXT_ARRAY;
 		static int _context;
 
+		static void init_parse();
+		static void init_plain();
+
 	public:
 		static std::map<std::string, std::any> parse(std::string);
+		static std::string plain(std::map<std::string, std::any>);
 
 	private:
 		static void start();
 
 		static void statement();
 
-		static void Key();
+		static void key();
 		static void value();
 
 		static void tarray();
-		static void array_sel();
+		static void array_selector();
 
 		static void tstring();
 		static void tchar();
@@ -149,6 +156,9 @@ namespace bps_core {
 
 		static void next_token();
 		static void consume_token(token_category);
+
+		static void plain_value(std::any);
+		static void plain_array(std::vector<std::any>);
 	};
 
 }
