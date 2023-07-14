@@ -80,10 +80,12 @@ namespace bps_core {
 				if (lexeme == "true" or lexeme == "false") {
 					_tokens.push_back(token(token_category::BOOL, lexeme, _curr_line, init_col));
 				}
-				else if (lexeme == "null") { // null 
+				// null 
+				else if (lexeme == "null") {
 					_tokens.push_back(token(token_category::T_NULL, lexeme, _curr_line, init_col));
 				}
-				else { // key
+				// key
+				else {
 					_tokens.push_back(token(token_category::KEY, lexeme, _curr_line, init_col));
 				}
 			}
