@@ -481,9 +481,6 @@ namespace bps_core {
 				if (c == '\'') {
 					plain_string_builder << "\\";
 				}
-				else {
-					plain_string_builder << "";
-				}
 				plain_string_builder << c;
 				plain_string_builder << "'";
 			}
