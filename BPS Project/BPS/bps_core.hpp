@@ -24,19 +24,19 @@ namespace bps_core {
 
 	enum token_category {
 		T_EOF = 0,
-		KEY = 1,
+		T_KEY = 1,
 		T_NULL = 2,
-		STRING = 3,
-		CHAR = 4,
-		INTEGER = 5,
-		FLOAT = 6,
-		DOUBLE = 7,
-		BOOL = 8,
-		OPEN_ARRAY = 9,
-		CLOSE_ARRAY = 10,
-		END_OF_DATA = 11,
-		DATA_SEP = 12,
-		ARRAY_SEP = 13
+		T_STRING = 3,
+		T_CHAR = 4,
+		T_INTEGER = 5,
+		T_FLOAT = 6,
+		T_DOUBLE = 7,
+		T_BOOL = 8,
+		T_OPEN_ARRAY = 9,
+		T_CLOSE_ARRAY = 10,
+		T_END_OF_DATA = 11,
+		T_DATA_SEP = 12,
+		T_ARRAY_SEP = 13
 	};
 
 	enum symbols {
@@ -63,8 +63,6 @@ namespace bps_core {
 		std::string image;
 		int line;
 		int collumn;
-
-		token() = default;
 
 		token(const token_category&, const std::string&, int, int);
 

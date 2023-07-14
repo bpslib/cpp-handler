@@ -78,7 +78,7 @@ namespace bps_core {
 
 				// true or false
 				if (lexeme == "true" or lexeme == "false") {
-					_tokens.push_back(token(token_category::BOOL, lexeme, _curr_line, init_col));
+					_tokens.push_back(token(token_category::T_BOOL, lexeme, _curr_line, init_col));
 				}
 				// null 
 				else if (lexeme == "null") {
@@ -86,32 +86,32 @@ namespace bps_core {
 				}
 				// key
 				else {
-					_tokens.push_back(token(token_category::KEY, lexeme, _curr_line, init_col));
+					_tokens.push_back(token(token_category::T_KEY, lexeme, _curr_line, init_col));
 				}
 			}
 			// open array
 			else if (_curr_char == symbols::LEFT_BRACKETS) {
-				_tokens.push_back(token(token_category::OPEN_ARRAY, std::string(&_curr_char), _curr_line, _curr_collumn));
+				_tokens.push_back(token(token_category::T_OPEN_ARRAY, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
 			}
 			// close array
 			else if (_curr_char == symbols::RIGHT_BRACKETS) {
-				_tokens.push_back(token(token_category::CLOSE_ARRAY, std::string(&_curr_char), _curr_line, _curr_collumn));
+				_tokens.push_back(token(token_category::T_CLOSE_ARRAY, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
 			}
 			// end of data
 			else if (_curr_char == symbols::SEMICOLON) {
-				_tokens.push_back(token(token_category::END_OF_DATA, std::string(&_curr_char), _curr_line, _curr_collumn));
+				_tokens.push_back(token(token_category::T_END_OF_DATA, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
 			}
 			// array sep
 			else if (_curr_char == symbols::COMMA) {
-				_tokens.push_back(token(token_category::ARRAY_SEP, std::string(&_curr_char), _curr_line, _curr_collumn));
+				_tokens.push_back(token(token_category::T_ARRAY_SEP, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
 			}
 			// data sep
 			else if (_curr_char == symbols::COLON) {
-				_tokens.push_back(token(token_category::DATA_SEP, std::string(&_curr_char), _curr_line, _curr_collumn));
+				_tokens.push_back(token(token_category::T_DATA_SEP, std::string(&_curr_char), _curr_line, _curr_collumn));
 				next_char();
 			}
 			// string
@@ -131,7 +131,7 @@ namespace bps_core {
 					throw std::invalid_argument(build_lexer_error_message("String was not closed", _curr_line, _curr_collumn));
 				}
 				lexeme += _curr_char;
-				_tokens.push_back(token(token_category::STRING, lexeme, _curr_line, init_col));
+				_tokens.push_back(token(token_category::T_STRING, lexeme, _curr_line, init_col));
 				next_char();
 			}
 			// char
@@ -149,7 +149,7 @@ namespace bps_core {
 					throw std::invalid_argument(build_lexer_error_message("Char was not closed", _curr_line, _curr_collumn));
 				}
 				lexeme += _curr_char;
-				_tokens.push_back(token(token_category::CHAR, lexeme, _curr_line, init_col));
+				_tokens.push_back(token(token_category::T_CHAR, lexeme, _curr_line, init_col));
 				next_char();
 			}
 			// numeric
@@ -177,13 +177,13 @@ namespace bps_core {
 				std::transform(lexeme.begin(), lexeme.end(), lexeme.begin(), ::tolower);
 				// float, double or int
 				if (lexeme.find('f') != std::string::npos) {
-					_tokens.push_back(token(token_category::FLOAT, lexeme, _curr_line, init_col));
+					_tokens.push_back(token(token_category::T_FLOAT, lexeme, _curr_line, init_col));
 				}
 				else if (lexeme.find(symbols::DOT) != std::string::npos or lexeme.find('d') != std::string::npos) {
-					_tokens.push_back(token(token_category::DOUBLE, lexeme, _curr_line, init_col));
+					_tokens.push_back(token(token_category::T_DOUBLE, lexeme, _curr_line, init_col));
 				}
 				else {
-					_tokens.push_back(token(token_category::INTEGER, lexeme, _curr_line, init_col));
+					_tokens.push_back(token(token_category::T_INTEGER, lexeme, _curr_line, init_col));
 				}
 			}
 			else {
@@ -270,7 +270,7 @@ namespace bps_core {
 
 	void parser::statement() {
 		switch (_curr_token.category) {
-		case token_category::KEY:
+		case token_category::T_KEY:
 			key();
 			break;
 		default:
@@ -281,33 +281,33 @@ namespace bps_core {
 	void parser::key() {
 		_key = _curr_token.image;
 		next_token();
-		consume_token(token_category::DATA_SEP);
+		consume_token(token_category::T_DATA_SEP);
 		value();
-		consume_token(token_category::END_OF_DATA);
+		consume_token(token_category::T_END_OF_DATA);
 		statement();
 	}
 
 	void parser::value() {
 		switch (_curr_token.category) {
-		case token_category::OPEN_ARRAY:
+		case token_category::T_OPEN_ARRAY:
 			tarray();
 			break;
-		case token_category::STRING:
+		case token_category::T_STRING:
 			tstring();
 			break;
-		case token_category::CHAR:
+		case token_category::T_CHAR:
 			tchar();
 			break;
-		case token_category::INTEGER:
+		case token_category::T_INTEGER:
 			tinteger();
 			break;
-		case token_category::FLOAT:
+		case token_category::T_FLOAT:
 			tfloat();
 			break;
-		case token_category::DOUBLE:
+		case token_category::T_DOUBLE:
 			tdouble();
 			break;
-		case token_category::BOOL:
+		case token_category::T_BOOL:
 			tbool();
 			break;
 		case token_category::T_NULL:
@@ -324,16 +324,16 @@ namespace bps_core {
 
 	void parser::array_selector() {
 		switch (_curr_token.category) {
-		case token_category::ARRAY_SEP:
+		case token_category::T_ARRAY_SEP:
 			next_token();
 			value();
 			break;
-		case token_category::CLOSE_ARRAY:
+		case token_category::T_CLOSE_ARRAY:
 			close_array();
 			next_token();
 			array_selector();
 			break;
-		case token_category::END_OF_DATA:
+		case token_category::T_END_OF_DATA:
 		case token_category::T_EOF:
 			break;
 		default:
