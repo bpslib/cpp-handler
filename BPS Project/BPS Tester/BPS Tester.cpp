@@ -94,4 +94,10 @@ int main() {
 	auto bps_string_data = BPS::plain(bps_struct_data);
 
 	std::cout << std::endl << bps_string_data;
+
+	auto bps_struct_data2 = BPS::parse(bps_string_data);
+
+	std::cout << std::endl;
+
+	print_map(bps_struct_data2);
 }
