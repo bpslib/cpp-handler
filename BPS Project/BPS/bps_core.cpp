@@ -12,13 +12,6 @@ namespace bps_core {
 	}
 
 	bool bps_core::is_skip(char c) {
-		//int size = sizeof(skip) / sizeof(skip[0]);
-		//for (int i = 0; i < size; ++i) {
-		//	if (c == skip[i]) {
-		//		return true;
-		//	}
-		//}
-		//return false;
 		auto fc = std::find(std::begin(skip), std::end(skip), c);
 		return fc != std::end(skip);
 	}
@@ -71,9 +64,10 @@ namespace bps_core {
 				next_line();
 				next_char();
 			}
-			else if (std::isalpha(_curr_char) or _curr_char == symbols::UNDERSCORE) { // key, boolean or null
+			// key, boolean or null
+			else if (std::isalpha(_curr_char) or _curr_char == symbols::UNDERSCORE) {
 				auto lexeme = std::string(&_curr_char);
-				auto initCol = _curr_collumn;
+				auto init_col = _curr_collumn;
 				next_char();
 
 				// loops the key
@@ -84,13 +78,13 @@ namespace bps_core {
 
 				// true or false
 				if (lexeme == "true" or lexeme == "false") {
-					_tokens.push_back(token(token_category::BOOL, lexeme, _curr_line, initCol));
+					_tokens.push_back(token(token_category::BOOL, lexeme, _curr_line, init_col));
 				}
 				else if (lexeme == "null") { // null 
-					_tokens.push_back(token(token_category::T_NULL, lexeme, _curr_line, initCol));
+					_tokens.push_back(token(token_category::T_NULL, lexeme, _curr_line, init_col));
 				}
 				else { // key
-					_tokens.push_back(token(token_category::KEY, lexeme, _curr_line, initCol));
+					_tokens.push_back(token(token_category::KEY, lexeme, _curr_line, init_col));
 				}
 			}
 			// open array
@@ -121,27 +115,27 @@ namespace bps_core {
 			// string
 			else if (_curr_char == symbols::DQUOTE) {
 				auto lexeme = std::string(&_curr_char);
-				auto initCol = _curr_collumn;
-				auto beforeChar = _curr_char;
+				auto init_col = _curr_collumn;
+				auto before_char = _curr_char;
 				next_char();
-				while (!end_of_input() and (_curr_char != symbols::DQUOTE or beforeChar == '\\')) {
-					if (_curr_char != '\\' or beforeChar == '\\') {
+				while (!end_of_input() and (_curr_char != symbols::DQUOTE or before_char == '\\')) {
+					if (_curr_char != '\\' or before_char == '\\') {
 						lexeme += _curr_char;
 					}
-					beforeChar = _curr_char;
+					before_char = _curr_char;
 					next_char();
 				}
 				if (_curr_char != symbols::DQUOTE) {
 					throw std::invalid_argument(build_lexer_error_message("String was not closed", _curr_line, _curr_collumn));
 				}
 				lexeme += _curr_char;
-				_tokens.push_back(token(token_category::STRING, lexeme, _curr_line, initCol));
+				_tokens.push_back(token(token_category::STRING, lexeme, _curr_line, init_col));
 				next_char();
 			}
 			// char
 			else if (_curr_char == symbols::QUOTE) {
 				auto lexeme = std::string(&_curr_char);
-				auto initCol = _curr_collumn;
+				auto init_col = _curr_collumn;
 				next_char();
 				if (_curr_char == '\\') {
 					lexeme += _curr_char;
@@ -153,13 +147,13 @@ namespace bps_core {
 					throw std::invalid_argument(build_lexer_error_message("Char was not closed", _curr_line, _curr_collumn));
 				}
 				lexeme += _curr_char;
-				_tokens.push_back(token(token_category::CHAR, lexeme, _curr_line, initCol));
+				_tokens.push_back(token(token_category::CHAR, lexeme, _curr_line, init_col));
 				next_char();
 			}
 			// numeric
 			else if (std::isdigit(_curr_char) or _curr_char == symbols::DOT or _curr_char == symbols::MINUS) {
 				auto lexeme = std::string(&_curr_char);
-				auto initCol = _curr_collumn;
+				auto init_col = _curr_collumn;
 				auto dotted = _curr_char == symbols::DOT;
 				next_char();
 				while (!end_of_input() and (std::isdigit(_curr_char) or _curr_char == symbols::DOT)) {
@@ -181,13 +175,13 @@ namespace bps_core {
 				std::transform(lexeme.begin(), lexeme.end(), lexeme.begin(), ::tolower);
 				// float, double or int
 				if (lexeme.find('f') != std::string::npos) {
-					_tokens.push_back(token(token_category::FLOAT, lexeme, _curr_line, initCol));
+					_tokens.push_back(token(token_category::FLOAT, lexeme, _curr_line, init_col));
 				}
 				else if (lexeme.find(symbols::DOT) != std::string::npos or lexeme.find('d') != std::string::npos) {
-					_tokens.push_back(token(token_category::DOUBLE, lexeme, _curr_line, initCol));
+					_tokens.push_back(token(token_category::DOUBLE, lexeme, _curr_line, init_col));
 				}
 				else {
-					_tokens.push_back(token(token_category::INTEGER, lexeme, _curr_line, initCol));
+					_tokens.push_back(token(token_category::INTEGER, lexeme, _curr_line, init_col));
 				}
 			}
 			else {
@@ -321,8 +315,7 @@ namespace bps_core {
 			build_parser_error_message(_curr_token.image, _curr_token.line, _curr_token.collumn, "a value or array");
 		}
 
-		if (_context == CONTEXT_ARRAY)
-		{
+		if (_context == CONTEXT_ARRAY) {
 			array_selector();
 		}
 	}
