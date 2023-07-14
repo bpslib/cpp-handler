@@ -82,10 +82,11 @@ int main() {
 	data += "key09:true;\n";
 	data += "key10:false;\n";
 	data += "key11:[false,true,false];\n";
-	data += "key12:[[10,5],[5,8]];\n";
+	data += "key12:[[10,5],[5,8,9]];\n";
 	data += "key13:-55;\n";
 	data += "key14:[\"fal\\\"se\"];\n";
 	data += "key15:null;\n";
+	data += "key16:[[[1,0,0],[0,1,0],[0,0,1]],[[1,0,1],[0,1,0],[1,0,1]],[[0,0,1],[0,1,0],[1,0,0]]];\n";
 	auto bps_struct_data = BPS::parse(data);
 
 	print_map(bps_struct_data);

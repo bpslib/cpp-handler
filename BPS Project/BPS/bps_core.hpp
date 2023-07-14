@@ -115,7 +115,7 @@ namespace bps_core {
 
 		static std::string _key;
 		static std::any _value;
-		static std::stack<std::vector<std::any>> _arr_stack;
+		static std::stack<std::vector<std::any>*> _arr_stack;
 
 		static const int CONTEXT_KEY;
 		static const int CONTEXT_ARRAY;

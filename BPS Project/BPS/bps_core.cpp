@@ -236,14 +236,14 @@ namespace bps_core {
 		return msg.str();
 	}
 
-	std::map<std::string, std::any> parser::_parsed_data = std::map<std::string, std::any>();
+	std::map<std::string, std::any> parser::_parsed_data;
 	std::stringstream parser::plain_string_builder;
 	std::vector<token> parser::_tokens;
 	token parser::_curr_token;
-	int parser::_curr_index = -1;
+	int parser::_curr_index;
 	std::string parser::_key;
 	std::any parser::_value;
-	std::stack<std::vector<std::any>> parser::_arr_stack = std::stack<std::vector<std::any>>();
+	std::stack<std::vector<std::any>*> parser::_arr_stack;
 	const int parser::CONTEXT_KEY = 0;
 	const int parser::CONTEXT_ARRAY = 1;
 	int parser::_context = CONTEXT_KEY;
@@ -251,7 +251,7 @@ namespace bps_core {
 	void parser::init_parse() {
 		_parsed_data = std::map<std::string, std::any>();
 		_curr_index = -1;
-		_arr_stack = std::stack<std::vector<std::any>>();
+		_arr_stack = std::stack<std::vector<std::any>*>();
 		_context = CONTEXT_KEY;
 	}
 
@@ -403,7 +403,7 @@ namespace bps_core {
 
 	void parser::set_value() {
 		if (_context == CONTEXT_ARRAY) {
-			_arr_stack.top().push_back(_value);
+			_arr_stack.top()->push_back(_value);
 		}
 		else {
 			_parsed_data.emplace(_key, _value);
@@ -414,22 +414,23 @@ namespace bps_core {
 	void parser::open_array() {
 		if (_arr_stack.size() == 0) {
 			_context = CONTEXT_ARRAY;
-			_arr_stack.push(std::vector<std::any>());
+			_arr_stack.push(new std::vector<std::any>());
 		}
 		else {
-			auto newDimension = std::vector<std::any>();
-			_arr_stack.top().push_back(newDimension);
+			auto newDimension = new std::vector<std::any>();
 			_arr_stack.push(newDimension);
 		}
 	}
 
 	void parser::close_array() {
 		if (_arr_stack.size() > 1) {
+			std::vector<std::any>* arr = _arr_stack.top();
 			_arr_stack.pop();
+			_arr_stack.top()->push_back(*arr);
 		}
 		else {
 			_context = CONTEXT_KEY;
-			_parsed_data.emplace(_key, _arr_stack.top());
+			_parsed_data.emplace(_key, *_arr_stack.top());
 			_arr_stack.pop();
 		}
 	}
@@ -491,23 +492,31 @@ namespace bps_core {
 				plain_string_builder << c;
 				plain_string_builder << "'";
 			}
-			else if (value.type() == typeid(bool))
-			{
-				plain_string_builder << std::any_cast<bool>(value) ? "true" : "false";
+			else if (value.type() == typeid(bool)) {
+				if (std::any_cast<bool>(value)) {
+					plain_string_builder << "true";
+				}
+				else {
+					plain_string_builder << "false";
+				}
 			}
-			else if (value.type() == typeid(float))
-			{
+			else if (value.type() == typeid(float)) {
 				plain_string_builder << std::any_cast<float>(value);
 				plain_string_builder << 'f';
 			}
-			else if (value.type() == typeid(double))
-			{
+			else if (value.type() == typeid(double)) {
 				plain_string_builder << std::any_cast<double>(value);
 				plain_string_builder << 'd';
 			}
-			else
-			{
+			else if (value.type() == typeid(int)) {
 				plain_string_builder << std::any_cast<int>(value);
+			}
+			else {
+				std::stringstream msg;
+				msg << "Invalid type '";
+				msg << value.type().name();
+				msg << "'.";
+				throw std::invalid_argument(msg.str());
 			}
 		}
 	}
