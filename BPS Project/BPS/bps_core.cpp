@@ -175,12 +175,9 @@ namespace bps_core {
 					next_char();
 				}
 				std::transform(lexeme.begin(), lexeme.end(), lexeme.begin(), ::tolower);
-				// float, double or int
-				if (lexeme.find('f') != std::string::npos) {
+				// float or int
+				if (lexeme.find(symbols::DOT) != std::string::npos or lexeme.find('f') != std::string::npos) {
 					_tokens.push_back(token(token_category::T_FLOAT, lexeme, _curr_line, init_col));
-				}
-				else if (lexeme.find(symbols::DOT) != std::string::npos or lexeme.find('d') != std::string::npos) {
-					_tokens.push_back(token(token_category::T_DOUBLE, lexeme, _curr_line, init_col));
 				}
 				else {
 					_tokens.push_back(token(token_category::T_INTEGER, lexeme, _curr_line, init_col));
@@ -233,7 +230,6 @@ namespace bps_core {
 	}
 
 	std::map<std::string, std::any> parser::_parsed_data;
-	std::stringstream parser::plain_string_builder;
 	std::vector<token> parser::_tokens;
 	token parser::_curr_token;
 	int parser::_curr_index;
@@ -244,19 +240,15 @@ namespace bps_core {
 	const int parser::CONTEXT_ARRAY = 1;
 	int parser::_context = CONTEXT_KEY;
 
-	void parser::init_parse() {
+	void parser::init() {
 		_parsed_data = std::map<std::string, std::any>();
 		_curr_index = -1;
 		_arr_stack = std::stack<std::vector<std::any>*>();
 		_context = CONTEXT_KEY;
 	}
 
-	void parser::init_plain() {
-		plain_string_builder = std::stringstream();
-	}
-
 	std::map<std::string, std::any> parser::parse(std::string data) {
-		init_parse();
+		init();
 		_tokens = lexer::tokenize(data);
 		start();
 		return _parsed_data;
@@ -303,9 +295,6 @@ namespace bps_core {
 			break;
 		case token_category::T_FLOAT:
 			tfloat();
-			break;
-		case token_category::T_DOUBLE:
-			tdouble();
 			break;
 		case token_category::T_BOOL:
 			tbool();
@@ -362,7 +351,7 @@ namespace bps_core {
 	}
 
 	void parser::tinteger() {
-		int intValue = std::stoi(_curr_token.image);
+		long long int intValue = std::stoll(_curr_token.image);
 		_value = intValue;
 		set_value();
 	}
@@ -371,17 +360,8 @@ namespace bps_core {
 		auto image = _curr_token.image;
 		std::transform(image.begin(), image.end(), image.begin(), ::tolower);
 		auto strValue = image.length() > 0 and image.back() == 'f' ? image.substr(0, image.length() - 1) : image;
-		float floatValue = std::stof(strValue);
+		long double floatValue = std::stold(strValue);
 		_value = floatValue;
-		set_value();
-	}
-
-	void parser::tdouble() {
-		auto image = _curr_token.image;
-		std::transform(image.begin(), image.end(), image.begin(), ::tolower);
-		auto strValue = image.length() > 0 and image.back() == 'd' ? image.substr(0, image.length() - 1) : image;
-		double doubleValue = std::stod(strValue);
-		_value = doubleValue;
 		set_value();
 	}
 
@@ -443,82 +423,77 @@ namespace bps_core {
 		next_token();
 	}
 
-	std::string parser::plain(std::map<std::string, std::any> data) {
-		init_plain();
+
+	std::stringstream plain::_plain_string_builder;
+
+	void plain::init() {
+		_plain_string_builder = std::stringstream();
+	}
+
+	std::string plain::parse(std::map<std::string, std::any> data) {
+		init();
 
 		// loops bps file adding each key-value to output
 		for (auto d : data) {
-			plain_string_builder << d.first;
-			plain_string_builder << ":";
-			plain_value(d.second);
-			plain_string_builder << ";" << std::endl;
+			_plain_string_builder << d.first;
+			_plain_string_builder << ":";
+			parse_value(d.second);
+			_plain_string_builder << ";" << std::endl;
 		}
 
-		return plain_string_builder.str();
+		return _plain_string_builder.str();
 	}
 
-	void parser::plain_value(std::any value) {
+	void plain::parse_value(std::any value) {
 		// null values
 		if (value.type() == typeid(nullptr)) {
-			plain_string_builder << "null";
+			_plain_string_builder << "null";
 		}
 		// value is an array
 		else if (value.type() == typeid(std::vector<std::any>)) {
-			plain_string_builder << "[";
-			plain_array(std::any_cast<std::vector<std::any>>(value));
-			plain_string_builder << "]";
+			_plain_string_builder << "[";
+			parse_array(std::any_cast<std::vector<std::any>>(value));
+			_plain_string_builder << "]";
 		}
 		// it's a normal value
 		else {
 			if (value.type() == typeid(std::string)) {
-				plain_string_builder << "\"";
-				plain_string_builder << std::regex_replace(std::any_cast<std::string>(value), std::regex("\""), "\\\"");
-				plain_string_builder << "\"";
+				_plain_string_builder << "\"";
+				_plain_string_builder << std::regex_replace(std::any_cast<std::string>(value), std::regex("\""), "\\\"");
+				_plain_string_builder << "\"";
 			}
 			else if (value.type() == typeid(char)) {
 				char c = std::any_cast<char>(value);
-				plain_string_builder << "'";
+				_plain_string_builder << "'";
 				if (c == '\'') {
-					plain_string_builder << "\\";
+					_plain_string_builder << "\\";
 				}
-				plain_string_builder << c;
-				plain_string_builder << "'";
+				_plain_string_builder << c;
+				_plain_string_builder << "'";
 			}
 			else if (value.type() == typeid(bool)) {
 				if (std::any_cast<bool>(value)) {
-					plain_string_builder << "true";
+					_plain_string_builder << "true";
 				}
 				else {
-					plain_string_builder << "false";
+					_plain_string_builder << "false";
 				}
 			}
-			else if (value.type() == typeid(float)) {
-				plain_string_builder << std::any_cast<float>(value);
-				plain_string_builder << 'f';
-			}
-			else if (value.type() == typeid(double)) {
-				plain_string_builder << std::any_cast<double>(value);
-				plain_string_builder << 'd';
-			}
-			else if (value.type() == typeid(int)) {
-				plain_string_builder << std::any_cast<int>(value);
+			else if (value.type() == typeid(float) or value.type() == typeid(double) or value.type() == typeid(long double) or std::any_cast<std::string>(value).find('.') != std::string::npos) {
+				_plain_string_builder << std::any_cast<long double>(value);
 			}
 			else {
-				std::stringstream msg;
-				msg << "Invalid type '";
-				msg << value.type().name();
-				msg << "'.";
-				throw std::invalid_argument(msg.str());
+				_plain_string_builder << std::any_cast<int>(value);
 			}
 		}
 	}
 
-	void parser::plain_array(std::vector<std::any> vector) {
+	void plain::parse_array(std::vector<std::any> vector) {
 		// loops each value in array
 		for (auto i = 0; i < vector.size(); ++i) {
-			plain_value(vector[i]);
+			parse_value(vector[i]);
 			if (i < vector.size() - 1) {
-				plain_string_builder << ",";
+				_plain_string_builder << ",";
 			}
 		}
 	}

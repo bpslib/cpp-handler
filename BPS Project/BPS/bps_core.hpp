@@ -30,13 +30,12 @@ namespace bps_core {
 		T_CHAR = 4,
 		T_INTEGER = 5,
 		T_FLOAT = 6,
-		T_DOUBLE = 7,
-		T_BOOL = 8,
-		T_OPEN_ARRAY = 9,
-		T_CLOSE_ARRAY = 10,
-		T_END_OF_DATA = 11,
-		T_DATA_SEP = 12,
-		T_ARRAY_SEP = 13
+		T_BOOL = 7,
+		T_OPEN_ARRAY = 8,
+		T_CLOSE_ARRAY = 9,
+		T_END_OF_DATA = 10,
+		T_DATA_SEP = 11,
+		T_ARRAY_SEP = 12
 	};
 
 	enum symbols {
@@ -63,6 +62,8 @@ namespace bps_core {
 		std::string image;
 		int line;
 		int collumn;
+
+		token() = default;
 
 		token(const token_category&, const std::string&, int, int);
 
@@ -104,7 +105,6 @@ namespace bps_core {
 	class parser {
 	private:
 		static std::map<std::string, std::any> _parsed_data;
-		static std::stringstream plain_string_builder;
 
 		// control vars
 		static std::vector<token> _tokens;
@@ -119,12 +119,10 @@ namespace bps_core {
 		static const int CONTEXT_ARRAY;
 		static int _context;
 
-		static void init_parse();
-		static void init_plain();
+		static void init();
 
 	public:
 		static std::map<std::string, std::any> parse(std::string);
-		static std::string plain(std::map<std::string, std::any>);
 
 	private:
 		static void start();
@@ -154,9 +152,19 @@ namespace bps_core {
 
 		static void next_token();
 		static void consume_token(token_category);
+	};
 
-		static void plain_value(std::any);
-		static void plain_array(std::vector<std::any>);
+	class plain {
+	private:
+		static std::stringstream _plain_string_builder;
+		static void init();
+
+	public:
+		static std::string parse(std::map<std::string, std::any>);
+
+	private:
+		static void parse_value(std::any);
+		static void parse_array(std::vector<std::any>);
 	};
 
 }

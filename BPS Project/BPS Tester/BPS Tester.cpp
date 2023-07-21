@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../BPS/BPS.hpp"
+#include "../BPS/BPSLib.hpp"
 
 #include <type_traits>
 
@@ -87,15 +87,15 @@ int main() {
 	data += "key14:[\"fal\\\"se\"];\n";
 	data += "key15:null;\n";
 	data += "key16:[[[1,0,0],[0,1,0],[0,0,1]],[[1,0,1],[0,1,0],[1,0,1]],[[0,0,1],[0,1,0],[1,0,0]]];\n";
-	auto bps_struct_data = BPS::parse(data);
+	auto bps_struct_data = BPSLib::BPS::parse(data);
 
 	print_map(bps_struct_data);
 
-	auto bps_string_data = BPS::plain(bps_struct_data);
+	auto bps_string_data = BPSLib::BPS::plain(bps_struct_data);
 
 	std::cout << std::endl << bps_string_data;
 
-	auto bps_struct_data2 = BPS::parse(bps_string_data);
+	auto bps_struct_data2 = BPSLib::BPS::parse(bps_string_data);
 
 	std::cout << std::endl;
 
