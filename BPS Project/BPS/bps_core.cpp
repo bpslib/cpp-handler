@@ -479,11 +479,33 @@ namespace bps_core {
 					_plain_string_builder << "false";
 				}
 			}
-			else if (value.type() == typeid(float) or value.type() == typeid(double) or value.type() == typeid(long double) or std::any_cast<std::string>(value).find('.') != std::string::npos) {
+			else if (value.type() == typeid(float)) {
+				_plain_string_builder << std::any_cast<float>(value);
+			}
+			else if (value.type() == typeid(double)) {
+				_plain_string_builder << std::any_cast<double>(value);
+			}
+			else if (value.type() == typeid(long double)) {
 				_plain_string_builder << std::any_cast<long double>(value);
 			}
-			else {
+			else if (value.type() == typeid(short)) {
+				_plain_string_builder << std::any_cast<short>(value);
+			}
+			else if (value.type() == typeid(int)) {
 				_plain_string_builder << std::any_cast<int>(value);
+			}
+			else if (value.type() == typeid(long)) {
+				_plain_string_builder << std::any_cast<long>(value);
+			}
+			else if (value.type() == typeid(long long)) {
+				_plain_string_builder << std::any_cast<long long>(value);
+			}
+			else {
+				std::stringstream msg;
+				msg << "Invalid type '";
+				msg << value.type().name();
+				msg << "'.";
+				throw std::invalid_argument(msg.str());
 			}
 		}
 	}
