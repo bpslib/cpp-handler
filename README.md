@@ -1,6 +1,6 @@
 # C++ Handler
 
-BPS is a key-value data storing structure. This handler provides a BPS data structure for C++.
+BPS is a key-value data handling structure. This handler provides a BPS data structure for C++.
 
 
 ## Guides and Documentation
